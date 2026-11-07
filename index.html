@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A0E27">
+<title>Yoron</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#0A0E27;--card:#121A3F;--card2:#0F1536;--line:#2B3A80;--text:#E8ECFF;--mute:#9AA5D6;--accent:#6C5CFF;--cyan:#4DD5FF;--gold:#FFC83D;--danger:#FF7A93;--ok:#35D07F}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#app{max-width:480px;margin:0 auto;height:100%;display:flex;flex-direction:column;position:relative;padding-top:env(safe-area-inset-top)}
+.screen{display:none;flex:1;min-height:0;flex-direction:column}
+.screen.on{display:flex}
+button,input,textarea{font:inherit;color:inherit}
+input,textarea{width:100%;height:48px;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:0 14px;outline:none}
+textarea{height:84px;padding:10px 14px;resize:none}
+input:focus,textarea:focus{border-color:var(--accent)}
+label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:var(--mute)}
+.btn{height:50px;border:0;border-radius:14px;background:linear-gradient(90deg,#4B5CFF,#7C5CFF);color:#fff;font-weight:800;cursor:pointer}
+.btn:disabled{opacity:.5}
+.btn.ghost{background:var(--card);border:1px solid var(--line);color:var(--text)}
+.btn.danger{background:transparent;border:1px solid var(--danger);color:var(--danger)}
+.row{display:flex;gap:12px;align-items:center}
+.mute{color:var(--mute);font-size:13px}
+.err{color:var(--danger);font-size:14px;min-height:20px}
+.av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;flex:none}
+.badge{background:var(--gold);color:#1B1240;font-size:11px;font-weight:800;border-radius:8px;padding:1px 7px;margin-left:6px;vertical-align:middle}
+#auth{padding:28px 22px;gap:12px;overflow-y:auto}
+.logo{text-align:center}.logo h1{margin:6px 0 0;font-size:40px;text-shadow:0 0 18px var(--accent)}
+.tabs{display:flex;background:var(--card);border-radius:14px;padding:4px}
+.tabs button{flex:1;border:0;background:transparent;border-radius:11px;padding:10px;font-weight:700;color:var(--mute)}
+.tabs button.on{background:var(--accent);color:#fff}
+.field-note{font-size:12px;min-height:16px}.ok{color:var(--ok)}.bad{color:var(--danger)}
+.pw{position:relative}.pw button{position:absolute;right:6px;top:6px;height:36px;border:0;background:transparent;color:var(--mute);font-size:13px}
+header.top{display:flex;align-items:center;gap:10px;padding:14px 16px 8px}
+header.top h2{margin:0;font-size:24px;flex:1}
+.list{flex:1;overflow-y:auto;min-height:0}
+.item{display:flex;gap:12px;align-items:center;padding:10px 16px;cursor:pointer}
+.item:active{background:var(--card)}
+.item .mid{flex:1;min-width:0}.item .name{font-weight:700}.item .last{color:var(--mute);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .end{text-align:right;font-size:12px;color:var(--mute)}
+.unread{display:inline-block;min-width:22px;height:22px;line-height:22px;border-radius:11px;background:var(--accent);color:#fff;font-size:12px;font-weight:700;text-align:center;margin-top:4px}
+.empty{padding:50px 30px;text-align:center;color:var(--mute)}
+.searchbox{padding:0 16px 8px}
+nav{display:flex;background:var(--card2);border-top:1px solid #1E2A66;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;border:0;background:transparent;padding:14px 0;color:var(--mute);font-size:13px;font-weight:600}
+nav button.on{color:#8B7BFF;font-weight:800}
+#chat header{background:var(--card2)}
+.back{border:0;background:transparent;font-size:28px;line-height:1;padding:0 6px;color:var(--text)}
+.msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:6px;min-height:0}
+.bub{max-width:78%;padding:8px 12px;border-radius:16px;white-space:pre-wrap;word-break:break-word}
+.in{align-self:flex-start;background:#1A2350}.out{align-self:flex-end;background:#2F4BD8}
+.meta{font-size:11px;opacity:.7;text-align:right;margin-top:2px}
+.composer{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--card2)}
+.composer input{border-radius:24px;height:46px}.composer .btn{height:46px;border-radius:24px;padding:0 18px}
+#profile .body{padding:0 16px 16px;overflow-y:auto;flex:1;min-height:0;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1A2350;border:1px solid var(--line);padding:10px 16px;border-radius:12px;display:none;max-width:90%;z-index:9;text-align:center}
+#offline{display:none;background:var(--danger);color:#1B1240;text-align:center;font-weight:700;padding:4px;font-size:13px}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="offline">Нет интернета</div>
+
+<!-- ВХОД / РЕГИСТРАЦИЯ -->
+<section id="auth" class="screen on">
+  <div class="logo">
+    <svg width="72" height="72" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 4l22 20H10z" fill="#4DD5FF"/><path d="M10 24h22v36z" fill="#6C5CFF"/><path d="M32 24h22L32 60z" fill="#4A3CE0"/></svg>
+    <h1>Yoron</h1>
+    <div class="mute">Общайся. Создавай. Вдохновляй.</div>
+  </div>
+  <div class="tabs"><button id="tabReg" class="on">Регистрация</button><button id="tabLog">Вход</button></div>
+
+  <form id="regForm" autocomplete="off" style="display:flex;flex-direction:column;gap:12px">
+    <label>@ник<input id="rNick" maxlength="20" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="например, surik"></label>
+    <div id="nickNote" class="field-note mute">3–20 символов: буквы a–z, цифры, подчёркивание</div>
+    <label>Имя (необязательно)<input id="rName" maxlength="40" placeholder="как тебя показывать"></label>
+    <label>Пароль<div class="pw"><input id="rPass" type="password" placeholder="минимум 8 символов"><button type="button" data-eye="rPass">Показать</button></div></label>
+    <label>Ключевое слово<div class="pw"><input id="rKey" type="password" placeholder="для восстановления пароля"><button type="button" data-eye="rKey">Показать</button></div></label>
+    <div class="mute">Не используй имя или дату рождения. Лучше три случайных слова: синий-слон-река. Запомни его: без него и без пароля вернуть аккаунт сможет только админ.</div>
+    <div id="rErr" class="err" role="alert"></div>
+    <button id="rBtn" class="btn" type="submit">Создать аккаунт</button>
+  </form>
+
+  <form id="logForm" style="display:none;flex-direction:column;gap:12px">
+    <label>@ник<input id="lNick" maxlength="20" autocapitalize="none" autocorrect="off" spellcheck="false"></label>
+    <label>Пароль<div class="pw"><input id="lPass" type="password"><button type="button" data-eye="lPass">Показать</button></div></label>
+    <div id="lErr" class="err" role="alert"></div>
+    <button id="lBtn" class="btn" type="submit">Войти</button>
+    <div class="mute" style="text-align:center">Забыл пароль? Пока сброс делает админ вручную.</div>
+  </form>
+</section>
+
+<!-- ЧАТЫ -->
+<section id="home" class="screen">
+  <header class="top"><h2>Чаты</h2></header>
+  <div class="searchbox"><input id="search" type="search" placeholder="Найти человека по @нику" autocapitalize="none" autocorrect="off"></div>
+  <div id="homeList" class="list"></div>
+</section>
+
+<!-- ПЕРЕПИСКА -->
+<section id="chat" class="screen">
+  <header class="top"><button class="back" id="chatBack" aria-label="Назад">‹</button><div id="chatAv"></div><div style="flex:1;min-width:0"><div id="chatName" style="font-weight:800"></div><div id="chatNick" class="mute"></div></div></header>
+  <div id="msgs" class="msgs"></div>
+  <div class="composer"><input id="msgInput" maxlength="4000" placeholder="Написать сообщение…" autocomplete="off"><button id="sendBtn" class="btn">Отправить</button></div>
+</section>
+
+<!-- ПРОФИЛЬ -->
+<section id="profile" class="screen">
+  <header class="top"><h2>Профиль</h2></header>
+  <div class="body">
+    <div style="text-align:center"><div id="pAv" style="display:inline-block"></div><div id="pName" style="font-size:22px;font-weight:800;margin-top:6px"></div><div id="pNick" class="mute"></div></div>
+    <div class="card row"><svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 4l22 20H10z" fill="#4DD5FF"/><path d="M10 24h22v36z" fill="#6C5CFF"/><path d="M32 24h22L32 60z" fill="#4A3CE0"/></svg><div><div class="mute">Баланс</div><div id="pBal" style="font-size:22px;font-weight:800"></div></div></div>
+    <label>Имя<input id="eName" maxlength="40"></label>
+    <label>О себе<textarea id="eBio" maxlength="200"></textarea></label>
+    <div id="pErr" class="err"></div>
+    <button id="saveBtn" class="btn">Сохранить</button>
+    <button id="outBtn" class="btn ghost">Выйти из аккаунта</button>
+    <button id="delBtn" class="btn danger">Удалить аккаунт</button>
+    <div class="mute" style="text-align:center">Yoron V1. Подарки, группы, звонки появятся в следующих версиях.</div>
+  </div>
+</section>
+
+<nav id="nav" style="display:none"><button id="navHome" class="on">Чаты</button><button id="navProf">Профиль</button></nav>
+<div id="toast" role="status"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js"></script>
+<script>
+/* ============ НАСТРОЙКА: вставь свои данные из Supabase (Project Settings -> API) ============ */
+const SUPABASE_URL = 'https://pgvftmyravnpmexzvigs.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_8xo_friuXuwj-HVNjFZMsA_AXPyb441';
+/* НИКОГДА не вставляй сюда secret / service_role ключ! Только sb_publishable_... */
+/* ================================================================================================ */
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $ = s => document.querySelector(s);
+const NICK_RE = /^[a-z0-9_]{3,20}$/;
+const fakeEmail = n => n + '@yoron-app.com';
+const norm = v => v.trim().replace(/^@/, '').toLowerCase();
+const COLORS = ['#6D28D9','#0369A1','#BE185D','#15803D','#B45309','#7C3AED','#0E7490','#B91C1C'];
+let me = null, peer = null, channel = null, shown = new Set(), sending = false, chatsCache = [];
+const drafts = {};
+
+function colorFor(s){ let h = 0; for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0; return COLORS[h % COLORS.length]; }
+function avatar(name, size){
+  const d = document.createElement('div'); d.className = 'av';
+  d.style.cssText = `width:${size}px;height:${size}px;font-size:${Math.round(size*.42)}px;background:${colorFor(name||'?')}`;
+  d.textContent = (name||'?').trim().charAt(0).toUpperCase(); return d;
+}
+function toast(t){ const e = $('#toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(()=>e.style.display='none', 3500); }
+function busy(btn, on, label){ btn.disabled = on; if(label) btn.textContent = on ? 'Подожди…' : label; }
+function fmtTime(iso){ const d = new Date(iso); const t = new Date();
+  return d.toDateString() === t.toDateString() ? d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : d.toLocaleDateString([], {day:'2-digit',month:'2-digit'}); }
+function nameWithBadge(p){ const f = document.createDocumentFragment(); f.append(p.display_name);
+  if (p.role === 'admin'){ const b = document.createElement('span'); b.className = 'badge'; b.textContent = 'Админ'; f.append(b); } return f; }
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id));
+  $('#nav').style.display = (id === 'home' || id === 'profile') ? 'flex' : 'none';
+  $('#navHome').classList.toggle('on', id === 'home'); $('#navProf').classList.toggle('on', id === 'profile');
+}
+
+/* ---------- вход / регистрация ---------- */
+$('#tabReg').onclick = () => { $('#tabReg').classList.add('on'); $('#tabLog').classList.remove('on'); $('#regForm').style.display='flex'; $('#logForm').style.display='none'; };
+$('#tabLog').onclick = () => { $('#tabLog').classList.add('on'); $('#tabReg').classList.remove('on'); $('#logForm').style.display='flex'; $('#regForm').style.display='none'; };
+document.querySelectorAll('[data-eye]').forEach(b => b.onclick = () => { const i = $('#'+b.dataset.eye); const h = i.type === 'password'; i.type = h ? 'text' : 'password'; b.textContent = h ? 'Скрыть' : 'Показать'; });
+
+let nickTimer;
+$('#rNick').addEventListener('input', () => {
+  const n = norm($('#rNick').value), note = $('#nickNote'); clearTimeout(nickTimer);
+  if (!n){ note.className='field-note mute'; note.textContent='3–20 символов: буквы a–z, цифры, подчёркивание'; return; }
+  if (!NICK_RE.test(n)){ note.className='field-note bad'; note.textContent='Только a–z, цифры и _ (от 3 до 20 символов)'; return; }
+  note.className='field-note mute'; note.textContent='Проверяю…';
+  nickTimer = setTimeout(async () => {
+    const { data, error } = await sb.rpc('username_free', { p: n });
+    if (norm($('#rNick').value) !== n) return;
+    if (error){ note.textContent=''; return; }
+    note.className = 'field-note ' + (data ? 'ok' : 'bad'); note.textContent = data ? '@' + n + ' свободен' : '@' + n + ' занят, попробуй @' + n + '1';
+  }, 400);
+});
+
+$('#regForm').addEventListener('submit', async e => {
+  e.preventDefault(); const err = $('#rErr'); err.textContent = '';
+  const nick = norm($('#rNick').value), pass = $('#rPass').value, key = $('#rKey').value.trim(), name = $('#rName').value.trim() || nick;
+  if (!NICK_RE.test(nick)) return err.textContent = 'Ник: 3–20 символов, только a–z, цифры и _';
+  if (pass.length < 8) return err.textContent = 'Пароль должен быть не короче 8 символов';
+  if (key.length < 4) return err.textContent = 'Ключевое слово должно быть не короче 4 символов';
+  if (key.toLowerCase() === pass.toLowerCase() || key.toLowerCase() === nick) return err.textContent = 'Ключевое слово должно отличаться от пароля и ника';
+  const btn = $('#rBtn'); busy(btn, true, 'Создать аккаунт');
+  try {
+    const { data, error } = await sb.auth.signUp({ email: fakeEmail(nick), password: pass, options: { data: { username: nick, display_name: name } } });
+    if (error){ err.textContent = /already|registered|Database error/i.test(error.message) ? 'Этот ник уже занят. Попробуй другой.' : 'Не получилось: ' + error.message; return; }
+    if (!data.session){ err.textContent = 'Вход не выполнен. В Supabase отключи подтверждение почты (Authentication → Sign In / Providers → Email → Confirm email = выкл).'; return; }
+    const r = await sb.rpc('set_keyword', { p_keyword: key });
+    if (r.error) toast('Аккаунт создан, но ключевое слово не сохранилось. Задай его позже в профиле.');
+    await afterLogin();
+  } catch (x) { err.textContent = 'Нет связи с сервером. Проверь интернет и настройки.'; }
+  finally { busy(btn, false, 'Создать аккаунт'); }
+});
+
+$('#logForm').addEventListener('submit', async e => {
+  e.preventDefault(); const err = $('#lErr'); err.textContent = '';
+  const nick = norm($('#lNick').value), pass = $('#lPass').value;
+  if (!nick || !pass) return err.textContent = 'Введи ник и пароль';
+  const btn = $('#lBtn'); busy(btn, true, 'Войти');
+  try {
+    const { error } = await sb.auth.signInWithPassword({ email: fakeEmail(nick), password: pass });
+    if (error){ err.textContent = 'Неверный ник или пароль'; return; }
+    await afterLogin();
+  } catch (x) { err.textContent = 'Нет связи с сервером. Проверь интернет.'; }
+  finally { busy(btn, false, 'Войти'); }
+});
+
+async function loadMe(){ const { data, error } = await sb.rpc('my_profile'); if (error || !data || !data[0]) return false; me = data[0]; return true; }
+async function afterLogin(){
+  if (!(await loadMe())){ toast('Не удалось загрузить профиль'); return; }
+  renderProfile(); show('home'); subscribe(); refreshChats();
+}
+
+/* ---------- чаты и поиск ---------- */
+async function refreshChats(){
+  const { data } = await sb.rpc('my_chats'); chatsCache = data || [];
+  if (!$('#search').value.trim()) renderChats();
+}
+function renderChats(){
+  const box = $('#homeList'); box.replaceChildren();
+  if (!chatsCache.length){ const d = document.createElement('div'); d.className = 'empty'; d.textContent = 'Пока нет чатов. Найди друга по @нику в строке поиска.'; box.append(d); return; }
+  chatsCache.forEach(c => box.append(itemEl({ id: c.other_id, username: c.username, display_name: c.display_name, role: c.role }, c.last_body, c.last_at, c.unread)));
+}
+function itemEl(p, last, at, unread){
+  const it = document.createElement('div'); it.className = 'item'; it.append(avatar(p.display_name, 48));
+  const mid = document.createElement('div'); mid.className = 'mid';
+  const n = document.createElement('div'); n.className = 'name'; n.append(nameWithBadge(p));
+  const l = document.createElement('div'); l.className = 'last'; l.textContent = last != null ? last : '@' + p.username;
+  mid.append(n, l); it.append(mid);
+  if (at){ const e = document.createElement('div'); e.className = 'end'; e.textContent = fmtTime(at);
+    if (unread > 0){ const u = document.createElement('div'); u.className = 'unread'; u.textContent = unread; e.append(u); } it.append(e); }
+  it.onclick = () => openChat(p); return it;
+}
+let searchTimer;
+$('#search').addEventListener('input', () => {
+  clearTimeout(searchTimer); const q = norm($('#search').value);
+  if (!q){ renderChats(); return; }
+  searchTimer = setTimeout(async () => {
+    const box = $('#homeList');
+    if (!/^[a-z0-9_]+$/.test(q)){ box.replaceChildren(); const d = document.createElement('div'); d.className='empty'; d.textContent='Ищи по нику: буквы a–z, цифры и _'; box.append(d); return; }
+    const { data, error } = await sb.from('profiles').select('id,username,display_name,role').ilike('username', q.replace(/_/g, '\\_') + '%').neq('id', me.id).order('username').limit(30);
+    if (norm($('#search').value) !== q) return;
+    box.replaceChildren();
+    if (error || !data.length){ const d = document.createElement('div'); d.className='empty'; d.textContent='Никого не найдено'; box.append(d); return; }
+    data.forEach(p => box.append(itemEl(p)));
+  }, 300);
+});
+
+/* ---------- переписка ---------- */
+function tick(m){ return m.sender_id === me.id ? (m.read_at ? ' ✓✓' : ' ✓') : ''; }
+function addMsg(m){
+  if (shown.has(m.id)) return; shown.add(m.id);
+  const b = document.createElement('div'); b.className = 'bub ' + (m.sender_id === me.id ? 'out' : 'in'); b.dataset.id = m.id;
+  const t = document.createElement('div'); t.textContent = m.body;
+  const meta = document.createElement('div'); meta.className = 'meta'; meta.textContent = fmtTime(m.created_at) + tick(m);
+  b.append(t, meta); const box = $('#msgs'); const near = box.scrollHeight - box.scrollTop - box.clientHeight < 120;
+  box.append(b); if (near || m.sender_id === me.id) box.scrollTop = box.scrollHeight;
+}
+async function openChat(p){
+  if (peer) drafts[peer.id] = $('#msgInput').value;
+  peer = p; shown = new Set(); $('#msgs').replaceChildren();
+  $('#chatAv').replaceChildren(avatar(p.display_name, 40)); $('#chatName').replaceChildren(nameWithBadge(p)); $('#chatNick').textContent = '@' + p.username;
+  $('#msgInput').value = drafts[p.id] || ''; show('chat');
+  const a = me.id, b = p.id;
+  const { data, error } = await sb.from('messages').select('*').or(`and(sender_id.eq.${a},recipient_id.eq.${b}),and(sender_id.eq.${b},recipient_id.eq.${a})`).order('created_at', { ascending: false }).limit(200);
+  if (error){ toast('Не удалось загрузить сообщения'); return; }
+  (data || []).reverse().forEach(addMsg); $('#msgs').scrollTop = $('#msgs').scrollHeight;
+  if (!data.length){ const d = document.createElement('div'); d.className = 'empty'; d.id = 'noMsgs'; d.textContent = 'Сообщений пока нет. Напиши первым!'; $('#msgs').append(d); }
+  markRead(p.id); $('#msgInput').focus();
+}
+async function markRead(otherId){
+  await sb.from('
