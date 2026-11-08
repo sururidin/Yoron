@@ -66,6 +66,7 @@ nav button.on{color:#8B7BFF;font-weight:800}
 <body>
 <div id="app">
 <div id="offline">Нет интернета</div>
+<div id="bug" style="display:none;background:#3A1020;color:#FFB4C4;font-size:12px;padding:6px 10px;word-break:break-word"></div>
 
 <!-- ВХОД / РЕГИСТРАЦИЯ -->
 <section id="auth" class="screen on">
@@ -76,7 +77,7 @@ nav button.on{color:#8B7BFF;font-weight:800}
   </div>
   <div class="tabs"><button id="tabReg" class="on">Регистрация</button><button id="tabLog">Вход</button></div>
 
-  <form id="regForm" autocomplete="off" style="display:flex;flex-direction:column;gap:12px">
+  <form id="regForm" onsubmit="return false" autocomplete="off" style="display:flex;flex-direction:column;gap:12px">
     <label>@ник<input id="rNick" maxlength="20" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="например, surik"></label>
     <div id="nickNote" class="field-note mute">3–20 символов: буквы a–z, цифры, подчёркивание</div>
     <label>Имя (необязательно)<input id="rName" maxlength="40" placeholder="как тебя показывать"></label>
@@ -87,7 +88,7 @@ nav button.on{color:#8B7BFF;font-weight:800}
     <button id="rBtn" class="btn" type="submit">Создать аккаунт</button>
   </form>
 
-  <form id="logForm" style="display:none;flex-direction:column;gap:12px">
+  <form id="logForm" onsubmit="return false" style="display:none;flex-direction:column;gap:12px">
     <label>@ник<input id="lNick" maxlength="20" autocapitalize="none" autocorrect="off" spellcheck="false"></label>
     <label>Пароль<div class="pw"><input id="lPass" type="password"><button type="button" data-eye="lPass">Показать</button></div></label>
     <div id="lErr" class="err" role="alert"></div>
@@ -130,7 +131,6 @@ nav button.on{color:#8B7BFF;font-weight:800}
 <div id="toast" role="status"></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js"></script>
 <script>
 /* ============ НАСТРОЙКА: вставь свои данные из Supabase (Project Settings -> API) ============ */
 const SUPABASE_URL = 'https://pgvftmyravnpmexzvigs.supabase.co';
@@ -138,7 +138,17 @@ const SUPABASE_ANON_KEY = 'sb_publishable_8xo_friuXuwj-HVNjFZMsA_AXPyb441';
 /* НИКОГДА не вставляй сюда secret / service_role ключ! Только sb_publishable_... */
 /* ================================================================================================ */
 
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let sb = null;
+const LIB_URLS = [
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js',
+  'https://unpkg.com/@supabase/supabase-js@2.110.1/dist/umd/supabase.js',
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'
+];
+function loadScript(u){ return new Promise((res, rej) => { const s = document.createElement('script'); s.src = u; s.onload = res; s.onerror = () => rej(new Error('load failed')); document.head.append(s); }); }
+async function loadLib(){ for (const u of LIB_URLS){ try { await loadScript(u); if (window.supabase && window.supabase.createClient) return u; } catch (e) {} } return null; }
+function showBug(t){ const b = document.querySelector('#bug'); b.style.display = 'block'; b.textContent = 'Ошибка: ' + t; }
+window.addEventListener('error', e => showBug((e.message || 'error') + (e.lineno ? ' (строка ' + e.lineno + ')' : '')));
+window.addEventListener('unhandledrejection', e => showBug(String((e.reason && e.reason.message) || e.reason)));
 const $ = s => document.querySelector(s);
 const NICK_RE = /^[a-z0-9_]{3,20}$/;
 const fakeEmail = n => n + '@yoron-app.com';
@@ -178,6 +188,7 @@ $('#rNick').addEventListener('input', () => {
   if (!NICK_RE.test(n)){ note.className='field-note bad'; note.textContent='Только a–z, цифры и _ (от 3 до 20 символов)'; return; }
   note.className='field-note mute'; note.textContent='Проверяю…';
   nickTimer = setTimeout(async () => {
+    if (!sb) return;
     const { data, error } = await sb.rpc('username_free', { p: n });
     if (norm($('#rNick').value) !== n) return;
     if (error){ note.textContent=''; return; }
@@ -187,6 +198,7 @@ $('#rNick').addEventListener('input', () => {
 
 $('#regForm').addEventListener('submit', async e => {
   e.preventDefault(); const err = $('#rErr'); err.textContent = '';
+  if (!sb) return err.textContent = 'Приложение ещё загружается или нет связи с сервером. Подожди пару секунд и нажми снова.';
   const nick = norm($('#rNick').value), pass = $('#rPass').value, key = $('#rKey').value.trim(), name = $('#rName').value.trim() || nick;
   if (!NICK_RE.test(nick)) return err.textContent = 'Ник: 3–20 символов, только a–z, цифры и _';
   if (pass.length < 8) return err.textContent = 'Пароль должен быть не короче 8 символов';
@@ -206,6 +218,7 @@ $('#regForm').addEventListener('submit', async e => {
 
 $('#logForm').addEventListener('submit', async e => {
   e.preventDefault(); const err = $('#lErr'); err.textContent = '';
+  if (!sb) return err.textContent = 'Приложение ещё загружается или нет связи с сервером. Подожди пару секунд и нажми снова.';
   const nick = norm($('#lNick').value), pass = $('#lPass').value;
   if (!nick || !pass) return err.textContent = 'Введи ник и пароль';
   const btn = $('#lBtn'); busy(btn, true, 'Войти');
@@ -264,21 +277,4 @@ function addMsg(m){
   if (shown.has(m.id)) return; shown.add(m.id);
   const b = document.createElement('div'); b.className = 'bub ' + (m.sender_id === me.id ? 'out' : 'in'); b.dataset.id = m.id;
   const t = document.createElement('div'); t.textContent = m.body;
-  const meta = document.createElement('div'); meta.className = 'meta'; meta.textContent = fmtTime(m.created_at) + tick(m);
-  b.append(t, meta); const box = $('#msgs'); const near = box.scrollHeight - box.scrollTop - box.clientHeight < 120;
-  box.append(b); if (near || m.sender_id === me.id) box.scrollTop = box.scrollHeight;
-}
-async function openChat(p){
-  if (peer) drafts[peer.id] = $('#msgInput').value;
-  peer = p; shown = new Set(); $('#msgs').replaceChildren();
-  $('#chatAv').replaceChildren(avatar(p.display_name, 40)); $('#chatName').replaceChildren(nameWithBadge(p)); $('#chatNick').textContent = '@' + p.username;
-  $('#msgInput').value = drafts[p.id] || ''; show('chat');
-  const a = me.id, b = p.id;
-  const { data, error } = await sb.from('messages').select('*').or(`and(sender_id.eq.${a},recipient_id.eq.${b}),and(sender_id.eq.${b},recipient_id.eq.${a})`).order('created_at', { ascending: false }).limit(200);
-  if (error){ toast('Не удалось загрузить сообщения'); return; }
-  (data || []).reverse().forEach(addMsg); $('#msgs').scrollTop = $('#msgs').scrollHeight;
-  if (!data.length){ const d = document.createElement('div'); d.className = 'empty'; d.id = 'noMsgs'; d.textContent = 'Сообщений пока нет. Напиши первым!'; $('#msgs').append(d); }
-  markRead(p.id); $('#msgInput').focus();
-}
-async function markRead(otherId){
-  await sb.from('
+  const meta = document.createElement('div'); meta.cl
