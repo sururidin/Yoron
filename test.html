@@ -1,0 +1,42 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<body style="background:#0A0E27;color:#fff;font:18px sans-serif;padding:16px">
+<h2>Проверка Yoron</h2>
+<pre id="o" style="white-space:pre-wrap">Запуск…</pre>
+<script>
+const o = document.getElementById('o');
+const log = t => { o.textContent += '\n' + t; };
+log('1. JavaScript работает: ДА');
+const urls = [
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js',
+  'https://unpkg.com/@supabase/supabase-js@2.110.1/dist/umd/supabase.js',
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'
+];
+const load = u => new Promise(r => {
+  const s = document.createElement('script');
+  s.src = u; s.onload = () => r(true); s.onerror = () => r(false);
+  document.head.append(s);
+});
+(async () => {
+  let lib = null;
+  for (const u of urls) {
+    const r = await load(u);
+    log('2. ' + u.split('/')[2] + (u.includes('2.45') ? ' (старая)' : ' (новая)') + ': ' + (r ? 'ЗАГРУЗИЛАСЬ' : 'НЕ загрузилась'));
+    if (r && !lib && window.supabase) lib = window.supabase;
+  }
+  if (!lib) { log('\nИТОГ: библиотека нигде не загрузилась. Проблема в интернете или блокировке сайтов.'); return; }
+  try {
+    const sb = lib.createClient('https://pgvftmyravnpmexzvigs.supabase.co', 'sb_publishable_8xo_friuXuwj-HVNjFZMsA_AXPyb441');
+    log('3. Подключение создано: ДА');
+    const t = Date.now();
+    const r = await Promise.race([
+      sb.rpc('username_free', { p: 'testcheck' }),
+      new Promise((_, j) => setTimeout(() => j(new Error('нет ответа за 10 секунд')), 10000))
+    ]);
+    log('4. Ответ сервера: ' + (r.error ? 'ОШИБКА ' + r.error.message : 'ДА, ответ ' + JSON.stringify(r.data)) + ' (' + (Date.now() - t) + ' мс)');
+    log('\nИТОГ: готово, смотри строки выше');
+  } catch (e) { log('ОШИБКА: ' + e.message); }
+})();
+</script>
+</body>
