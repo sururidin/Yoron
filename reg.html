@@ -1,0 +1,33 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<body style="background:#0A0E27;color:#fff;font:18px sans-serif;padding:16px">
+<h2>Тест регистрации</h2>
+<input id="n" placeholder="ник (a-z, цифры)" style="width:100%;font-size:18px;padding:10px;margin:4px 0">
+<input id="p" placeholder="пароль (8+ символов)" style="width:100%;font-size:18px;padding:10px;margin:4px 0">
+<input id="k" placeholder="ключевое слово (4+)" style="width:100%;font-size:18px;padding:10px;margin:4px 0">
+<button id="b" style="width:100%;font-size:20px;padding:14px;margin:8px 0">Создать аккаунт</button>
+<pre id="o" style="white-space:pre-wrap">Готов. Заполни поля и нажми кнопку, потом подожди до 15 секунд.</pre>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.js"></script>
+<script>
+const o = document.getElementById('o'), log = t => { o.textContent += '\n' + t; };
+const sb = supabase.createClient('https://pgvftmyravnpmexzvigs.supabase.co', 'sb_publishable_8xo_friuXuwj-HVNjFZMsA_AXPyb441');
+document.getElementById('b').onclick = async () => {
+  const n = document.getElementById('n').value.trim().toLowerCase().replace(/^@/, '');
+  const p = document.getElementById('p').value, k = document.getElementById('k').value.trim();
+  log('Нажато. ник = ' + n);
+  try {
+    log('1. Создаю аккаунт…');
+    const r = await sb.auth.signUp({ email: n + '@yoron-app.com', password: p, options: { data: { username: n, display_name: n } } });
+    if (r.error) { log('ОШИБКА регистрации: ' + r.error.message); return; }
+    log('1. Аккаунт создан: ДА. Вход сразу: ' + (r.data.session ? 'ДА' : 'НЕТ (подтверждение почты не выключено)'));
+    if (!r.data.session) return;
+    const s = await sb.rpc('set_keyword', { p_keyword: k });
+    log('2. Ключевое слово: ' + (s.error ? 'ОШИБКА ' + s.error.message : 'сохранено'));
+    const m = await sb.rpc('my_profile');
+    log('3. Профиль: ' + (m.error ? 'ОШИБКА ' + m.error.message : JSON.stringify(m.data)));
+    log('\nИТОГ: готово');
+  } catch (e) { log('СБОЙ: ' + e.message); }
+};
+</script>
+</body>
