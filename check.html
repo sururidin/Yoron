@@ -1,0 +1,29 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<body style="background:#0A0E27;color:#fff;font:16px sans-serif;padding:16px">
+<h2>Проверка index.html</h2>
+<pre id="o" style="white-space:pre-wrap">Проверяю…</pre>
+<script>
+const E = "8ae 9a1 kvg 27p gk8 qck 5y0 tmr tma gx2 br4 jwn 136 5z7 90k w6a jpa nz9 ua6 hfa jez cw3 mtt nb2 osl rg5 0es utc 0cg 2hq 7zm r92 zcw 114 bdl ty2 5vr kr5".split(' '), N = 374, B = 10;
+const h = s => { let x = 0; for (let i = 0; i < s.length; i++) x = (x * 33 + s.charCodeAt(i)) >>> 0; const n = x % 46656, d = '0123456789abcdefghijklmnopqrstuvwxyz'; return d[Math.floor(n / 1296)] + d[Math.floor(n / 36) % 36] + d[n % 36]; };
+const o = document.getElementById('o'), log = t => { o.textContent += '\n' + t; };
+fetch('index.html?' + Date.now()).then(r => r.text()).then(t => {
+  const L = t.replace(/\r/g, '').split('\n');
+  log('Строк на сайте: ' + L.length + ' (должно быть ' + N + ')');
+  log('Последняя строка: ' + JSON.stringify(L[L.length - 2] || ''));
+  let bad = 0;
+  for (let i = 0; i < Math.max(E.length, Math.ceil(L.length / B)); i++) {
+    const part = L.slice(i * B, i * B + B).map(l => l.replace(/\s+$/, ''));
+    if (h(part.join('\n')) !== E[i]) {
+      bad++;
+      if (bad <= 2) { log('\nНЕ СОВПАДАЕТ блок строк ' + (i * B + 1) + '-' + (i * B + B) + ':'); part.forEach((l, k) => log((i * B + k + 1) + ': ' + l.slice(0, 90))); }
+    }
+  }
+  log('\nНесовпадающих блоков: ' + bad);
+  const m = t.match(/<script>([\s\S]*?)<\/script>/);
+  try { new Function(m ? m[1] : ''); log('Скрипт читается без ошибок: ДА'); } catch (e) { log('ОШИБКА В СКРИПТЕ: ' + e.message); }
+  log(bad === 0 && L.length === N ? '\nИТОГ: файл ТОЧНО такой, как надо' : '\nИТОГ: файл на сайте отличается от моего');
+}).catch(e => log('СБОЙ: ' + e.message));
+</script>
+</body>
